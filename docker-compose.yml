@@ -1,0 +1,43 @@
+﻿version: "3.9"
+
+services:
+  # API dentro de Docker (solo si quieres levantarla "normal", sin debug)
+  api:
+    build: ./backend
+    container_name: ats-api
+    env_file: .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "${API_PORT:-8012}:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+
+  # Postgres
+  db:
+    image: postgres:16
+    container_name: ats-db
+    environment:
+      POSTGRES_DB: mini_ats
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5455:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: ats-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-patricio.leppe@gmail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "5055:80"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
