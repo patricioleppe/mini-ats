@@ -5,6 +5,9 @@ from app.db.session import get_db
 from app.models.company import Company
 from app.schemas.company import CompanyCreate, CompanyOut
 from typing import List
+from fastapi.security import SecurityScopes
+from app.routers.auth import require_scopes
+from app.schemas.auth import JWTPayload
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -74,6 +77,13 @@ def get_company(company_id: int, db: Session = Depends(get_db),):
     return company
 
 
+
+@router.get("/by-city/{city_name}", response_model=List[CompanyOut])
+def get_companies_by_city(city_name: str, db: Session = Depends(get_db),):
+    companies = db.query(Company).filter(Company.ciudad.ilike(f"%{city_name}%")).all()
+    if not companies:
+        raise HTTPException(status_code=404, detail="No companies found in the specified city")
+    return companies
 
 
 @router.get("", response_model=List[CompanyOut])
